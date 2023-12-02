@@ -2,8 +2,6 @@ package day01
 
 import (
 	"fmt"
-	"log"
-	"strconv"
 	"strings"
 	"unicode"
 
@@ -19,16 +17,16 @@ func Run() {
 	fmt.Println("The answer to part two is:", calculateSum(list, true))
 }
 
-var wordToDigit = map[string]string{
-	"one":   "1",
-	"two":   "2",
-	"three": "3",
-	"four":  "4",
-	"five":  "5",
-	"six":   "6",
-	"seven": "7",
-	"eight": "8",
-	"nine":  "9",
+var wordToDigit = map[string]int{
+	"one":   1,
+	"two":   2,
+	"three": 3,
+	"four":  4,
+	"five":  5,
+	"six":   6,
+	"seven": 7,
+	"eight": 8,
+	"nine":  9,
 }
 
 // calculateSum calculated the sum of all the two digit numbers in the list
@@ -37,16 +35,16 @@ var wordToDigit = map[string]string{
 func calculateSum(list []string, partTwo bool) int {
 	sum := 0
 	for _, row := range list {
-		var firstDigit, secondDigit string
+		var firstDigit, secondDigit int
 
-		// user pointer i to go forward in the string until we reach a valid digit
+		// use pointer i to go forward in the string until we reach a valid digit
 		i := 0
 		for i < len(row) {
 			if partTwo {
 				foundWord := false
 				for word, digit := range wordToDigit {
-					// check if the string up to i contains a number word
-					if strings.Contains(row[0:i], word) {
+					// check if the string from the start index to i contains a number word
+					if strings.Contains(row[startIndex(i):i], word) {
 						firstDigit = digit
 						foundWord = true
 						break
@@ -59,28 +57,28 @@ func calculateSum(list []string, partTwo bool) int {
 
 			// check if the char at i is a digit
 			if unicode.IsDigit(rune(row[i])) {
-				firstDigit = string(row[i])
+				firstDigit = byteToDigit(row[i])
 				i++
 				break
 			}
 			i++
 		}
 
-		// user pointer j to go backwards in the string until we reach a valid digit
+		// use pointer j to go backwards in the string until we reach a valid digit
 		// or if the pointers meet
 		j := len(row) - 1
 		for i <= j {
 			// check if the char at j is a digit
 			if unicode.IsDigit(rune(row[j])) {
-				secondDigit = string(row[j])
+				secondDigit = byteToDigit(row[j])
 				break
 			}
 
 			if partTwo {
 				foundWord := false
-				// check if the string from j to the end contains a number word
+				// check if the string from j to the end index contains a number word
 				for word, digit := range wordToDigit {
-					if strings.Contains(row[j:], word) {
+					if strings.Contains(row[j:endIndex(j, len(row))], word) {
 						secondDigit = digit
 						foundWord = true
 						break
@@ -99,13 +97,32 @@ func calculateSum(list []string, partTwo bool) int {
 			secondDigit = firstDigit
 		}
 
-		val, err := strconv.Atoi(firstDigit + secondDigit)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		sum += val
+		sum += 10*firstDigit + secondDigit
 	}
 
 	return sum
+}
+
+// startIndex returns an index to start position of the search
+// since the longest word is 5 chars, we only need to check range of i to five indexes before i
+func startIndex(i int) int {
+	if i < 5 {
+		return 0
+	}
+	return i - 5
+}
+
+// endIndex returns an index to end position of the search
+// since the longest word is 5 chars, we only need to check range of j to five indexes after j
+func endIndex(j, stringLen int) int {
+	if j-5 < stringLen {
+		return stringLen
+	}
+
+	return j - 5
+}
+
+// byteToInt converts a byte to a digit
+func byteToDigit(b byte) int {
+	return int(b - 48)
 }
