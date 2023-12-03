@@ -2,6 +2,7 @@ package day02
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -9,109 +10,17 @@ import (
 	"github.com/humzamo/advent-of-code-2023/internal/helpers"
 )
 
-type Game struct {
-	ID       int
-	Rounds   []Round
-	Possible bool
-	Power    int
-}
-
-type Round struct {
-	Red      int
-	Blue     int
-	Green    int
-	Possible bool
-}
-
-var MaxColours = map[Colour]int{
-	ColourRed:   12,
-	ColourGreen: 13,
-	ColourBlue:  14,
-}
-
-type Colour string
-
-var (
-	ColourRed   Colour = "red"
-	ColourGreen Colour = "green"
-	ColourBlue  Colour = "blue"
-)
-
 func Run() {
 	fmt.Println("Generating solutions for day 02...")
 
 	list := helpers.LoadStringList("../../internal/challenges/day-02/input.txt")
-	games := parseListPartTwo(list)
+	games := parseList(list)
 
 	fmt.Println("The answer to part one is:", partOne(games))
 	fmt.Println("The answer to part two is:", partTwo(games))
 }
 
-var gameIDreg = "Game ([0-9]+):"
-var blueCountReg = "([0-9]+) blue"
-var greenCountReg = "([0-9]+) green"
-var redCountReg = "([0-9]+) red"
-
-func parseListPartOne(list []string) []Game {
-	var games []Game
-
-	for _, row := range list {
-		r, _ := regexp.Compile(gameIDreg)
-		idMatch := r.FindAllStringSubmatch(row, -1)
-		id, _ := strconv.Atoi(idMatch[0][1])
-
-		game := Game{
-			ID:       id,
-			Possible: true,
-		}
-		roundStrings := strings.Split(row, ";")
-		var rounds []Round
-		for _, r := range roundStrings {
-			round := Round{Possible: true}
-
-			blueReg, _ := regexp.Compile(blueCountReg)
-			blueMatch := blueReg.FindAllStringSubmatch(r, -1)
-			if blueMatch != nil {
-				blue, _ := strconv.Atoi(blueMatch[0][1])
-				round.Blue = blue
-				if blue > MaxColours[ColourBlue] {
-					round.Possible = false
-				}
-
-			}
-
-			redReg, _ := regexp.Compile(redCountReg)
-			redMatch := redReg.FindAllStringSubmatch(r, -1)
-			if redMatch != nil {
-				red, _ := strconv.Atoi(redMatch[0][1])
-				round.Red = red
-				if red > MaxColours[ColourRed] {
-					round.Possible = false
-				}
-			}
-
-			greenReg, _ := regexp.Compile(greenCountReg)
-			greenMatch := greenReg.FindAllStringSubmatch(r, -1)
-			if greenMatch != nil {
-				green, _ := strconv.Atoi(greenMatch[0][1])
-				round.Green = green
-				if green > MaxColours[ColourGreen] {
-					round.Possible = false
-				}
-			}
-			if !round.Possible {
-				game.Possible = false
-			}
-			fmt.Println(round)
-			rounds = append(rounds, round)
-		}
-		game.Rounds = rounds
-
-		games = append(games, game)
-	}
-	return games
-}
-
+// partOne sums the IDs of all the games which are possible
 func partOne(games []Game) int {
 	sum := 0
 	for _, game := range games {
@@ -122,68 +31,91 @@ func partOne(games []Game) int {
 	return sum
 }
 
-func parseListPartTwo(list []string) []Game {
+// partTwo sums the powers of all the games
+func partTwo(games []Game) int {
+	sum := 0
+	for _, game := range games {
+		sum += game.Power
+	}
+	return sum
+}
+
+// parseList parses the string list into a slice of completed games
+func parseList(list []string) []Game {
 	var games []Game
 
+	digitsRegex := "([0-9]+)"
+
+	gameIDRegex, err := regexp.Compile("Game " + digitsRegex)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	greenRegex, err := regexp.Compile(digitsRegex + " " + string(ColourGreen))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	redRegex, err := regexp.Compile(digitsRegex + " " + string(ColourRed))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	blueRegex, err := regexp.Compile(digitsRegex + " " + string(ColourBlue))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	for _, row := range list {
-		r, _ := regexp.Compile(gameIDreg)
-		idMatch := r.FindAllStringSubmatch(row, -1)
-		id, _ := strconv.Atoi(idMatch[0][1])
+		game := NewGame()
 
-		game := Game{
-			ID:       id,
-			Possible: true,
+		// the ID corresponds to the item number of the list but this
+		// is a useful step in case the input didn't follow this logic
+		idMatch := gameIDRegex.FindAllStringSubmatch(row, -1)
+		id, err := strconv.Atoi(idMatch[0][1])
+		if err != nil {
+			log.Fatal(err)
 		}
+		game.ID = id
+
+		// all rounds of a game are split by the `;` char in the string
 		roundStrings := strings.Split(row, ";")
+
 		var rounds []Round
-		var minRed, minBlue, minGreen int
+
 		for _, r := range roundStrings {
-			round := Round{Possible: true}
+			var blue, red, green int
 
-			blueReg, _ := regexp.Compile(blueCountReg)
-			blueMatch := blueReg.FindAllStringSubmatch(r, -1)
+			blueMatch := blueRegex.FindAllStringSubmatch(r, -1)
 			if blueMatch != nil {
-				blue, _ := strconv.Atoi(blueMatch[0][1])
-				round.Blue = blue
-				if blue > MaxColours[ColourBlue] {
-					round.Possible = false
-				}
-				if blue > minBlue {
-					minBlue = blue
+				blue, err = strconv.Atoi(blueMatch[0][1])
+				if err != nil {
+					log.Fatal(err)
 				}
 			}
 
-			redReg, _ := regexp.Compile(redCountReg)
-			redMatch := redReg.FindAllStringSubmatch(r, -1)
+			redMatch := redRegex.FindAllStringSubmatch(r, -1)
 			if redMatch != nil {
-				red, _ := strconv.Atoi(redMatch[0][1])
-				round.Red = red
-				if red > MaxColours[ColourRed] {
-					round.Possible = false
-				}
-				if red > minRed {
-					minRed = red
+				red, err = strconv.Atoi(redMatch[0][1])
+				if err != nil {
+					log.Fatal(err)
 				}
 			}
 
-			greenReg, _ := regexp.Compile(greenCountReg)
-			greenMatch := greenReg.FindAllStringSubmatch(r, -1)
+			greenMatch := greenRegex.FindAllStringSubmatch(r, -1)
 			if greenMatch != nil {
-				green, _ := strconv.Atoi(greenMatch[0][1])
-				round.Green = green
-				if green > MaxColours[ColourGreen] {
-					round.Possible = false
-				}
-				if green > minGreen {
-					minGreen = green
+				green, err = strconv.Atoi(greenMatch[0][1])
+				if err != nil {
+					log.Fatal(err)
 				}
 			}
-			if !round.Possible {
-				game.Possible = false
-			}
+
+			round := NewRound(red, green, blue)
+			game.checkPossible(round)
+			game.setMinValues(round)
 			rounds = append(rounds, round)
 		}
-		game.Power = minBlue * minGreen * minRed
+		game.setPower()
 		game.Rounds = rounds
 
 		games = append(games, game)
@@ -191,10 +123,34 @@ func parseListPartTwo(list []string) []Game {
 	return games
 }
 
-func partTwo(games []Game) int {
-	sum := 0
-	for _, game := range games {
-		sum += game.Power
+// checkPossible verifies if each round has at least the minimum items
+// for each colour
+func (g *Game) checkPossible(r Round) {
+	if !g.Possible {
+		// already verified that the game is impossible
+		return
 	}
-	return sum
+	g.Possible = r.Blue <= MaxColours[ColourBlue] &&
+		r.Red <= MaxColours[ColourRed] &&
+		r.Green <= MaxColours[ColourGreen]
+}
+
+// setMinValues sets the minimum values for the game based on each round
+func (g *Game) setMinValues(r Round) {
+	if r.Red > 0 && r.Red > g.MinRed {
+		g.MinRed = r.Red
+	}
+
+	if r.Green > 0 && r.Green > g.MinGreen {
+		g.MinGreen = r.Green
+	}
+
+	if r.Blue > 0 && r.Blue > g.MinBlue {
+		g.MinBlue = r.Blue
+	}
+}
+
+// setPower sets the power of the game by multiplying all the min values
+func (g *Game) setPower() {
+	g.Power = g.MinRed * g.MinGreen * g.MinBlue
 }
