@@ -13,7 +13,7 @@ import (
 func Run() {
 	fmt.Println("Generating solutions for day 02...")
 
-	list := helpers.LoadStringList("../../internal/challenges/day-02/input.txt")
+	list := helpers.LoadStringList("./internal/challenges/day-02/input.txt")
 	games := parseList(list)
 
 	fmt.Println("The answer to part one is:", partOne(games))

@@ -11,7 +11,7 @@ import (
 func Run() {
 	fmt.Println("Generating solutions for day 01...")
 
-	list := helpers.LoadStringList("../../internal/challenges/day-01/input.txt")
+	list := helpers.LoadStringList("./internal/challenges/day-01/input.txt")
 
 	fmt.Println("The answer to part one is:", calculateSum(list, false))
 	fmt.Println("The answer to part two is:", calculateSum(list, true))
