@@ -9,51 +9,46 @@ import (
 	"github.com/humzamo/advent-of-code-2023/internal/helpers"
 )
 
+// Run runs the input file to generate the answers for Day 4
 func Run() {
 	fmt.Println("Generating solutions for day 04...")
 
-	list := helpers.LoadStringList("./internal/challenges/day-04/input.txt")
-	games := parseList(list)
+	partOneAns, partTwoAns := generateAnswers("./internal/challenges/day-04/input.txt")
 
-	fmt.Println("The answer to part one is:", partOne(games))
-	// fmt.Println("The answer to part two is:", partTwo(games))
+	fmt.Println("The answer to part one is:", partOneAns)
+	fmt.Println("The answer to part two is:", partTwoAns)
 }
 
-// partOne sums the points from all the games
-func partOne(games []Game) int {
+// generateAnswers generates the answers for both parts
+func generateAnswers(inputFile string) (int, int) {
+	list := helpers.LoadStringList(inputFile)
+	cards, copies := parseList(list)
+
+	return partOne(cards), partTwo(copies)
+}
+
+// partOne sums the points from all the cards
+func partOne(cards []Card) int {
 	sum := 0
-	for _, game := range games {
-		sum += gamesToPoints[game.MatchingNumbersCount]
+	for _, c := range cards {
+		sum += cardToPoints[c.MatchingNumbersCount]
 	}
 	return sum
 }
 
-// partTwo sums the powers of all the games
-func partTwo(games []Game) int {
+// partTwo sums the copies of all the cards
+func partTwo(copies Copies) int {
 	sum := 0
-	for _, game := range games {
-		// TODO
-		sum += game.ID
+	for _, count := range copies {
+		sum += count
 	}
 	return sum
 }
 
-var gamesToPoints = map[int]int{
-	1:  1,
-	2:  2,
-	3:  4,
-	4:  8,
-	5:  16,
-	6:  32,
-	7:  64,
-	8:  128,
-	9:  256,
-	10: 512,
-}
-
-// parseList parses the string list into a slice of completed games
-func parseList(list []string) []Game {
-	var games []Game
+// parseList parses the string list into a slice of cards and copies information
+func parseList(list []string) ([]Card, Copies) {
+	var cards []Card
+	var copies = Copies{}
 
 	for _, row := range list {
 		splitByID := strings.Split(row, ":")
@@ -73,7 +68,7 @@ func parseList(list []string) []Game {
 
 		matchingNumbers := helpers.Intersection(winningNumbers, chosenNumbers)
 
-		game := Game{
+		card := Card{
 			ID:                   id,
 			WinningNumbers:       winningNumbers,
 			ChosenNumbers:        chosenNumbers,
@@ -81,7 +76,18 @@ func parseList(list []string) []Game {
 			MatchingNumbersCount: len(matchingNumbers),
 		}
 
-		games = append(games, game)
+		// this is the first time analysing this new card so add a copy to the map
+		copies[id]++
+
+		// for every copy of the card, increase the copies of the corresponding cards
+		for i := 0; i < copies[id]; i++ {
+			for j := 1; j <= len(matchingNumbers); j++ {
+				copies[id+j]++
+			}
+		}
+
+		cards = append(cards, card)
 	}
-	return games
+
+	return cards, copies
 }
