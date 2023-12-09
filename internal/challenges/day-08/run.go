@@ -24,7 +24,7 @@ func generateAnswers(inputFile string) (int, int) {
 	list := helpers.LoadStringList(inputFile)
 	instructions, nodes := parseList(list)
 	fmt.Println(instructions, nodes)
-	return partOne(instructions, nodes), 0
+	return 0, partTwo(instructions, nodes)
 }
 
 func partOne(instructions []string, nodes Nodes) int {
@@ -64,9 +64,70 @@ func partOne(instructions []string, nodes Nodes) int {
 	return count
 }
 
-// func (n *Nodes) moveNode(currentNode string) {
-// 	n[currentNode]
-// }
+func partTwo(instructions []string, nodes Nodes) int {
+	count := 0
+	reachedZ := false
+	currentNodes := []string{}
+
+	for n := range nodes {
+		if n[2] == 'A' {
+			currentNodes = append(currentNodes, n)
+		}
+	}
+
+	for i := 0; i < len(instructions); i++ {
+		count++
+		if reachedZ {
+			break
+		}
+
+		fmt.Println("current:", currentNodes)
+		// fmt.Println("current:", currentNode)
+		fmt.Println(instructions[i])
+		// fmt.Println(nodes[currentNode])
+
+		if instructions[i] == "L" {
+
+			for i, n := range currentNodes {
+				currentNodes[i] = nodes[n][0]
+			}
+
+		}
+
+		if instructions[i] == "R" {
+			for i, n := range currentNodes {
+				currentNodes[i] = nodes[n][1]
+			}
+		}
+		fmt.Println("new:", currentNodes)
+
+		endLetters := ""
+		for _, n := range currentNodes {
+			endLetters += string(n[2])
+			// endLetter = append(endLetter, n[2])
+			// if n[2] != 'Z' {
+			// 	reachedZ = false
+			// 	break
+			// }
+			// reachedZ = true
+		}
+		fmt.Println(endLetters)
+		if endLetters == "ZZZZZZ" {
+			reachedZ = true
+			break
+		}
+
+		if reachedZ {
+			break
+		}
+
+		if i == len(instructions)-1 && !reachedZ {
+			i = -1
+		}
+	}
+
+	return count
+}
 
 // parseList parses the string list into a slice of hands
 func parseList(list []string) ([]string, Nodes) {
