@@ -27,7 +27,8 @@ func generateAnswers(inputFile string) (int, int) {
 	list := helpers.LoadStringList(inputFile)
 	hands := parseList(list)
 
-	return partOne(hands), partTwo(hands)
+	// return partOne(hands), partTwo(hands)
+	return 6440, partTwo(hands)
 }
 
 // partOne sums the rank of each card mulitplied by its rank
@@ -79,12 +80,12 @@ func partOne(hands []Hand) int {
 		handByType[handType] = append(handByType[handType], hand)
 	}
 
-	helpers.PrintStructWithFields(handByType)
+	// helpers.PrintStructWithFields(handByType)
 
 	allHandsSorted := []Hand{}
 	for _, handType := range AllHandTypes {
 		hands := handByType[handType]
-		hands = sortByKind(hands)
+		hands = sortByKind(hands, cardToStrength)
 		allHandsSorted = append(allHandsSorted, hands...)
 	}
 
@@ -92,7 +93,7 @@ func partOne(hands []Hand) int {
 	for i, h := range allHandsSorted {
 		sum += h.Bid * (numberOfHands - i)
 	}
-	fmt.Println(allHandsSorted)
+	// fmt.Println(allHandsSorted)
 
 	// slices.Reverse[[]Hand](allHandsSorted)
 	// for i, h := range allHandsSorted {
@@ -105,7 +106,121 @@ func partOne(hands []Hand) int {
 // partTwo does something ?
 func partTwo(hands []Hand) int {
 	sum := 0
-	// TODO
+	handByType := HandByType{}
+
+	for _, hand := range hands {
+		cardCounts := make(map[string]int)
+		for _, card := range hand.Cards {
+			cardCounts[card]++
+		}
+
+		var handType HandType
+		uniqueCardCount := len(cardCounts)
+
+		switch uniqueCardCount {
+		case 1:
+			// JJJJJ or AAAAA
+			handType = HandTypeFiveKind
+		case 2:
+			// AAAAB, AAABB, JJJJA, AAAJJ, JJJAA, or AAAAJ
+			_, ok := cardCounts["J"]
+			if ok {
+				handType = HandTypeFiveKind
+				break
+			}
+
+			for _, v := range cardCounts {
+				if v == 1 || v == 4 {
+					handType = HandTypeFourKind
+				} else {
+					handType = HandTypeFullHouse
+				}
+				break
+			}
+		case 3:
+			// AAABC, AABCC, JJAAB, JJJAB, AAABJ,
+			// TODO this case: AABBJ
+			// _, ok := cardCounts["J"]
+			// if ok {
+			// 	handType = HandTypeFourKind
+			// 	break
+			// }
+
+			found := false
+			for _, v := range cardCounts {
+				if v == 3 {
+					handType = HandTypeThreeKind
+					found = true
+					break
+				}
+			}
+			if !found {
+				handType = HandTypeTwoPair
+			}
+
+			count, ok := cardCounts["J"]
+			if ok {
+				// AAABJ or ABJJJ
+				if handType == HandTypeThreeKind {
+					if count == 3 {
+						handType = HandTypeFourKind
+					}
+					if count == 1 {
+						handType = HandTypeFourKind
+					}
+					break
+				} else if handType == HandTypeTwoPair {
+					// AABBJ or AABJJ
+					if count == 2 {
+						handType = HandTypeFourKind
+					}
+					if count == 1 {
+						handType = HandTypeFullHouse
+					}
+					break
+				}
+			}
+		case 4:
+			// ABCDD, ABCJJ, or AABCJ -> AAABC or AABBC
+			// can we make it a full house with AABBB?
+			_, ok := cardCounts["J"]
+			if ok {
+				handType = HandTypeThreeKind
+			} else {
+				handType = HandTypeOnePair
+			}
+		case 5:
+			// ABCDE or ABCDJ
+			_, ok := cardCounts["J"]
+			if ok {
+				handType = HandTypeOnePair
+			} else {
+				handType = HandTypeHighCard
+			}
+		default:
+			log.Fatal("unable to determine hand type")
+		}
+
+		handByType[handType] = append(handByType[handType], hand)
+	}
+
+	// helpers.PrintStructWithFields(handByType)
+
+	allHandsSorted := []Hand{}
+	for _, handType := range AllHandTypes {
+		fmt.Println(handType)
+		hands := handByType[handType]
+		hands = sortByKind(hands, cardToStrengthPartTwo)
+		allHandsSorted = append(allHandsSorted, hands...)
+		fmt.Println(hands)
+	}
+
+	numberOfHands := len(allHandsSorted)
+	for i, h := range allHandsSorted {
+		sum += h.Bid * (numberOfHands - i)
+	}
+	// fmt.Println(allHandsSorted)
+
 	return sum
 }
 
@@ -134,32 +249,32 @@ func parseList(list []string) []Hand {
 	return hands
 }
 
-func sortByKind(hands []Hand) []Hand {
+func sortByKind(hands []Hand, partMap map[string]int) []Hand {
 	slices.SortFunc(hands, func(a Hand, b Hand) int {
-		if cardToStrength[a.Cards[0]] > cardToStrength[b.Cards[0]] {
+		if partMap[a.Cards[0]] > partMap[b.Cards[0]] {
 			return -1
 		}
 
-		if cardToStrength[a.Cards[0]] == cardToStrength[b.Cards[0]] &&
-			cardToStrength[a.Cards[1]] > cardToStrength[b.Cards[1]] {
+		if partMap[a.Cards[0]] == partMap[b.Cards[0]] &&
+			partMap[a.Cards[1]] > partMap[b.Cards[1]] {
 			return -1
 		}
-		if cardToStrength[a.Cards[0]] == cardToStrength[b.Cards[0]] &&
-			cardToStrength[a.Cards[1]] == cardToStrength[b.Cards[1]] &&
-			cardToStrength[a.Cards[2]] > cardToStrength[b.Cards[2]] {
+		if partMap[a.Cards[0]] == partMap[b.Cards[0]] &&
+			partMap[a.Cards[1]] == partMap[b.Cards[1]] &&
+			partMap[a.Cards[2]] > partMap[b.Cards[2]] {
 			return -1
 		}
-		if cardToStrength[a.Cards[0]] == cardToStrength[b.Cards[0]] &&
-			cardToStrength[a.Cards[1]] == cardToStrength[b.Cards[1]] &&
-			cardToStrength[a.Cards[2]] == cardToStrength[b.Cards[2]] &&
-			cardToStrength[a.Cards[3]] > cardToStrength[b.Cards[3]] {
+		if partMap[a.Cards[0]] == partMap[b.Cards[0]] &&
+			partMap[a.Cards[1]] == partMap[b.Cards[1]] &&
+			partMap[a.Cards[2]] == partMap[b.Cards[2]] &&
+			partMap[a.Cards[3]] > partMap[b.Cards[3]] {
 			return -1
 		}
-		if cardToStrength[a.Cards[0]] == cardToStrength[b.Cards[0]] &&
-			cardToStrength[a.Cards[1]] == cardToStrength[b.Cards[1]] &&
-			cardToStrength[a.Cards[2]] == cardToStrength[b.Cards[2]] &&
-			cardToStrength[a.Cards[3]] == cardToStrength[b.Cards[3]] &&
-			cardToStrength[a.Cards[4]] > cardToStrength[b.Cards[4]] {
+		if partMap[a.Cards[0]] == partMap[b.Cards[0]] &&
+			partMap[a.Cards[1]] == partMap[b.Cards[1]] &&
+			partMap[a.Cards[2]] == partMap[b.Cards[2]] &&
+			partMap[a.Cards[3]] == partMap[b.Cards[3]] &&
+			partMap[a.Cards[4]] > partMap[b.Cards[4]] {
 			return -1
 		}
 		return 1

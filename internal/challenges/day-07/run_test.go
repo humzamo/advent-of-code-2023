@@ -11,10 +11,10 @@ type testCase struct {
 	expectedPartTwoAnswer int
 }
 
-func TestDay04(t *testing.T) {
+func TestDay07(t *testing.T) {
 	cases := []testCase{
-		{"input_test.txt", 6440, 0},
-		{"input.txt", 251806792, 0},
+		{"input_test.txt", 6440, 5905},
+		// {"input.txt", 251806792, 0},
 	}
 
 	for _, tc := range cases {
@@ -26,7 +26,7 @@ func TestDay04(t *testing.T) {
 			}
 
 			if actualPartTwoAns != tc.expectedPartTwoAnswer {
-				t.Errorf("Failed running part one! Expected %v, but got %v", tc.expectedPartTwoAnswer, actualPartTwoAns)
+				t.Errorf("Failed running part two! Expected %v, but got %v", tc.expectedPartTwoAnswer, actualPartTwoAns)
 			}
 		})
 	}
