@@ -163,31 +163,32 @@ func parseList(list []string) []Hand {
 	return hands
 }
 
+// sortByKind ranks a slice of hands by the strength distinct card
 func sortByKind(hands []Hand, partMap map[string]int) []Hand {
 	slices.SortFunc(hands, func(a Hand, b Hand) int {
 		if partMap[a.Cards[0]] > partMap[b.Cards[0]] {
 			return -1
 		}
 
-		if partMap[a.Cards[0]] == partMap[b.Cards[0]] &&
+		if a.Cards[0] == b.Cards[0] &&
 			partMap[a.Cards[1]] > partMap[b.Cards[1]] {
 			return -1
 		}
-		if partMap[a.Cards[0]] == partMap[b.Cards[0]] &&
-			partMap[a.Cards[1]] == partMap[b.Cards[1]] &&
+		if a.Cards[0] == b.Cards[0] &&
+			a.Cards[1] == b.Cards[1] &&
 			partMap[a.Cards[2]] > partMap[b.Cards[2]] {
 			return -1
 		}
-		if partMap[a.Cards[0]] == partMap[b.Cards[0]] &&
-			partMap[a.Cards[1]] == partMap[b.Cards[1]] &&
-			partMap[a.Cards[2]] == partMap[b.Cards[2]] &&
+		if a.Cards[0] == b.Cards[0] &&
+			a.Cards[1] == b.Cards[1] &&
+			a.Cards[2] == b.Cards[2] &&
 			partMap[a.Cards[3]] > partMap[b.Cards[3]] {
 			return -1
 		}
-		if partMap[a.Cards[0]] == partMap[b.Cards[0]] &&
-			partMap[a.Cards[1]] == partMap[b.Cards[1]] &&
-			partMap[a.Cards[2]] == partMap[b.Cards[2]] &&
-			partMap[a.Cards[3]] == partMap[b.Cards[3]] &&
+		if a.Cards[0] == b.Cards[0] &&
+			a.Cards[1] == b.Cards[1] &&
+			a.Cards[2] == b.Cards[2] &&
+			a.Cards[3] == b.Cards[3] &&
 			partMap[a.Cards[4]] > partMap[b.Cards[4]] {
 			return -1
 		}
