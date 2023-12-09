@@ -1,4 +1,4 @@
-package day04
+package day07
 
 import (
 	"fmt"
@@ -11,10 +11,10 @@ type testCase struct {
 	expectedPartTwoAnswer int
 }
 
-func TestDay04(t *testing.T) {
+func TestDay07(t *testing.T) {
 	cases := []testCase{
-		{"input_test.txt", 13, 30},
-		{"input.txt", 23678, 15455663},
+		{"input_test.txt", 6440, 5905},
+		{"input.txt", 251806792, 252113488},
 	}
 
 	for _, tc := range cases {
