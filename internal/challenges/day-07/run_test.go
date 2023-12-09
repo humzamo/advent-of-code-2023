@@ -14,7 +14,7 @@ type testCase struct {
 func TestDay07(t *testing.T) {
 	cases := []testCase{
 		{"input_test.txt", 6440, 5905},
-		// {"input.txt", 251806792, 0},
+		{"input.txt", 251806792, 252113488},
 	}
 
 	for _, tc := range cases {

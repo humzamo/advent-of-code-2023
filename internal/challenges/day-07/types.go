@@ -6,8 +6,8 @@ type Hand struct {
 	Bid   int
 }
 
-// cardToStrength maps a card to its relative strength
-var cardToStrength = map[string]int{
+// cardToStrengthPartOne maps a card to its relative strength
+var cardToStrengthPartOne = map[string]int{
 	"2": 1,
 	"3": 2,
 	"4": 3,
@@ -23,7 +23,7 @@ var cardToStrength = map[string]int{
 	"A": 13,
 }
 
-// cardToStrength maps a card to its relative strength
+// cardToStrengthPartTwo maps a card to its relative strength
 var cardToStrengthPartTwo = map[string]int{
 	"J": 1,
 	"2": 2,

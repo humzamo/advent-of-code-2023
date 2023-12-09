@@ -27,86 +27,18 @@ func generateAnswers(inputFile string) (int, int) {
 	list := helpers.LoadStringList(inputFile)
 	hands := parseList(list)
 
-	// return partOne(hands), partTwo(hands)
-	return 6440, partTwo(hands)
+	return calculateAnswer(hands, false), calculateAnswer(hands, true)
 }
 
-// partOne sums the rank of each card mulitplied by its rank
-func partOne(hands []Hand) int {
+// calculateAnswer sums the rank of each card mulitplied by its rank
+func calculateAnswer(hands []Hand, partTwo bool) int {
 	sum := 0
 	handByType := HandByType{}
+	partMap := cardToStrengthPartOne
 
-	for _, hand := range hands {
-		cardCounts := make(map[string]int)
-		for _, card := range hand.Cards {
-			cardCounts[card]++
-		}
-
-		var handType HandType
-		uniqueCardCount := len(cardCounts)
-
-		switch uniqueCardCount {
-		case 1:
-			handType = HandTypeFiveKind
-		case 2:
-			for _, v := range cardCounts {
-				if v == 1 || v == 4 {
-					handType = HandTypeFourKind
-				} else {
-					handType = HandTypeFullHouse
-				}
-				break
-			}
-		case 3:
-			found := false
-			for _, v := range cardCounts {
-				if v == 3 {
-					handType = HandTypeThreeKind
-					found = true
-					break
-				}
-			}
-			if !found {
-				handType = HandTypeTwoPair
-			}
-		case 4:
-			handType = HandTypeOnePair
-		case 5:
-			handType = HandTypeHighCard
-		default:
-			log.Fatal("unable to determine hand type")
-		}
-
-		handByType[handType] = append(handByType[handType], hand)
+	if partTwo {
+		partMap = cardToStrengthPartTwo
 	}
-
-	// helpers.PrintStructWithFields(handByType)
-
-	allHandsSorted := []Hand{}
-	for _, handType := range AllHandTypes {
-		hands := handByType[handType]
-		hands = sortByKind(hands, cardToStrength)
-		allHandsSorted = append(allHandsSorted, hands...)
-	}
-
-	numberOfHands := len(allHandsSorted)
-	for i, h := range allHandsSorted {
-		sum += h.Bid * (numberOfHands - i)
-	}
-	// fmt.Println(allHandsSorted)
-
-	// slices.Reverse[[]Hand](allHandsSorted)
-	// for i, h := range allHandsSorted {
-	// 	sum += h.Bid * (i + 1)
-	// }
-
-	return sum
-}
-
-// partTwo does something ?
-func partTwo(hands []Hand) int {
-	sum := 0
-	handByType := HandByType{}
 
 	for _, hand := range hands {
 		cardCounts := make(map[string]int)
@@ -124,11 +56,12 @@ func partTwo(hands []Hand) int {
 		case 2:
 			// AAAAB, AAABB, JJJJA, AAAJJ, JJJAA, or AAAAJ
 			_, ok := cardCounts["J"]
-			if ok {
+			if ok && partTwo {
 				handType = HandTypeFiveKind
 				break
 			}
 
+			// if there is 1 or 4 of any card, the type must be four of a kind
 			for _, v := range cardCounts {
 				if v == 1 || v == 4 {
 					handType = HandTypeFourKind
@@ -138,14 +71,7 @@ func partTwo(hands []Hand) int {
 				break
 			}
 		case 3:
-			// AAABC, AABCC, JJAAB, JJJAB, AAABJ,
-			// TODO this case: AABBJ
-			// _, ok := cardCounts["J"]
-			// if ok {
-			// 	handType = HandTypeFourKind
-			// 	break
-			// }
-
+			// AAABC, AABCC, JJAAB, JJJAB, AAABJ, AABBJ
 			found := false
 			for _, v := range cardCounts {
 				if v == 3 {
@@ -159,44 +85,39 @@ func partTwo(hands []Hand) int {
 			}
 
 			count, ok := cardCounts["J"]
-			if ok {
+			if ok && partTwo {
 				// AAABJ or ABJJJ
 				if handType == HandTypeThreeKind {
-					if count == 3 {
-						handType = HandTypeFourKind
-					}
-					if count == 1 {
-						handType = HandTypeFourKind
-					}
+					handType = HandTypeFourKind
 					break
-				} else if handType == HandTypeTwoPair {
-					// AABBJ or AABJJ
-					if count == 2 {
-						handType = HandTypeFourKind
-					}
+				}
+
+				// AABBJ or AABJJ
+				if handType == HandTypeTwoPair {
 					if count == 1 {
 						handType = HandTypeFullHouse
 					}
-					break
+					if count == 2 {
+						handType = HandTypeFourKind
+					}
 				}
 			}
 		case 4:
-			// ABCDD, ABCJJ, or AABCJ -> AAABC or AABBC
-			// can we make it a full house with AABBB?
+			// ABCDD, ABCJJ, or AABCJ
 			_, ok := cardCounts["J"]
-			if ok {
+			if ok && partTwo {
 				handType = HandTypeThreeKind
-			} else {
-				handType = HandTypeOnePair
+				break
 			}
+			handType = HandTypeOnePair
 		case 5:
 			// ABCDE or ABCDJ
 			_, ok := cardCounts["J"]
-			if ok {
+			if ok && partTwo {
 				handType = HandTypeOnePair
-			} else {
-				handType = HandTypeHighCard
+				break
 			}
+			handType = HandTypeHighCard
 		default:
 			log.Fatal("unable to determine hand type")
 		}
@@ -204,22 +125,17 @@ func partTwo(hands []Hand) int {
 		handByType[handType] = append(handByType[handType], hand)
 	}
 
-	// helpers.PrintStructWithFields(handByType)
-
+	// sort the cards from strongest to weakest based on the hand type
 	allHandsSorted := []Hand{}
 	for _, handType := range AllHandTypes {
-		fmt.Println(handType)
-		hands := handByType[handType]
-		hands = sortByKind(hands, cardToStrengthPartTwo)
+		hands := sortByKind(handByType[handType], partMap)
 		allHandsSorted = append(allHandsSorted, hands...)
-		fmt.Println(hands)
 	}
 
 	numberOfHands := len(allHandsSorted)
 	for i, h := range allHandsSorted {
 		sum += h.Bid * (numberOfHands - i)
 	}
-	// fmt.Println(allHandsSorted)
 
 	return sum
 }
@@ -238,12 +154,10 @@ func parseList(list []string) []Hand {
 			log.Fatal(err)
 		}
 
-		hand := Hand{
+		hands = append(hands, Hand{
 			Cards: cards,
 			Bid:   bid,
-		}
-
-		hands = append(hands, hand)
+		})
 	}
 
 	return hands

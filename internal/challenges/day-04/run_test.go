@@ -26,7 +26,7 @@ func TestDay04(t *testing.T) {
 			}
 
 			if actualPartTwoAns != tc.expectedPartTwoAnswer {
-				t.Errorf("Failed running part one! Expected %v, but got %v", tc.expectedPartTwoAnswer, actualPartTwoAns)
+				t.Errorf("Failed running part two! Expected %v, but got %v", tc.expectedPartTwoAnswer, actualPartTwoAns)
 			}
 		})
 	}
